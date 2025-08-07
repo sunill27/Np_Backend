@@ -1,8 +1,10 @@
 const News = require("../database/model/newsModel");
+const cloudinary = require("../middleware/cloudinaryConfig");
 
 class NewsController {
   // Add News API
   async addNews(req, res) {
+    console.log("addNews called");
     const { title, excerpt, description, author, publishedAt } = req.body;
     if (!title || !description) {
       return res
@@ -10,13 +12,20 @@ class NewsController {
         .json({ message: "Title and description are mandatory" });
     }
     try {
-      await News.create({
-        title: title,
-        excerpt: excerpt,
-        description: description,
-        author: author,
+      const newsData = {
+        title,
+        excerpt,
+        description,
+        author,
         publishedAt,
-      });
+      };
+      // If image was uploaded, add imageUrl and imageId
+      if (req.file) {
+        newsData.imageUrl = req.file.path;
+        newsData.imageId = req.file.filename; // Cloudinary public_id
+      }
+
+      const news = await News.create(newsData);
       res.status(200).json({
         message: "News created successfully!",
       });
@@ -51,7 +60,7 @@ class NewsController {
     try {
       const news = await News.findById(id);
       if (!news) {
-        res.status(404).json({
+        return res.status(404).json({
           message: "Nothing found!",
         });
       }
@@ -69,14 +78,31 @@ class NewsController {
   async updateNews(req, res) {
     const { id } = req.params;
     const { title, excerpt, description, author, publishedAt } = req.body;
+
     try {
-      const news = await News.findByIdAndUpdate(id, req.body, {
-        new: true,
-        runValidators: true,
-      });
+      const news = await News.findById(id);
       if (!news) {
         return res.status(404).json({ message: "News not found." });
       }
+
+      // If a new image is uploaded
+      if (req.file) {
+        // Delete old image from Cloudinary
+        if (news.imageId) {
+          await cloudinary.uploader.destroy(news.imageId);
+        }
+        // Update with new image info
+        news.imageUrl = req.file.path;
+        news.imageId = req.file.filename;
+      }
+      // Update other fields
+      if (title !== undefined) news.title = title;
+      if (excerpt !== undefined) news.excerpt = excerpt;
+      if (description !== undefined) news.description = description;
+      if (author !== undefined) news.author = author;
+      if (publishedAt !== undefined) news.publishedAt = publishedAt;
+
+      await news.save();
       res.status(200).json({
         message: "News updated successfully!",
         data: news,
@@ -91,10 +117,16 @@ class NewsController {
   async deleteNews(req, res) {
     const { id } = req.params;
     try {
-      const News = await News.findByIdAndDelete(id);
+      const news = await News.findById(id);
       if (!news) {
         return res.status(404).json({ message: "News not found." });
       }
+      // Delete image from Cloudinary if exists
+      if (news.imageId) {
+        await cloudinary.uploader.destroy(news.imageId);
+      }
+      // Delete the news document
+      await news.deleteOne();
       res.status(200).json({
         message: "News deleted successfully!",
       });
@@ -179,5 +211,4 @@ class NewsController {
     }
   }
 }
-
 module.exports = new NewsController();

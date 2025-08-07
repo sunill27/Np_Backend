@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 
@@ -9,6 +10,7 @@ app.use(
     origin: "*",
   })
 );
+const parser = require("./middleware/upload");
 
 // Parse JSON bodies
 app.use(express.json());
@@ -40,6 +42,16 @@ async function startServer() {
 
   const categoryRoute = require("./routes/categoryRoute");
   app.use("/categories", categoryRoute);
+
+  // Cloudinary upload endpoint
+  app.post("/upload", parser.single("image"), (req, res) => {
+    console.log(req.file); // file info from Cloudinary
+    res.json({
+      message: "File uploaded successfully",
+      url: req.file.path, // Cloudinary URL
+      public_id: req.file.filename,
+    });
+  });
 
   app.listen(PORT, () => {
     console.log("Server has started at port:", PORT);

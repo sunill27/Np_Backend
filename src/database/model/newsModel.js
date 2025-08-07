@@ -20,6 +20,12 @@ const newsSchema = new mongoose.Schema(
       type: String,
       required: [true, "Description is required"],
     },
+    imageUrl: {
+      type: String,
+    },
+    imageId: {
+      type: String,
+    },
     author: {
       type: String,
     },

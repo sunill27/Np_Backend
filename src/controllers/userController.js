@@ -33,7 +33,7 @@ class userController {
   async loginUser(req, res) {
     try {
       const { email, password } = req.body;
-      if (!email || !email) {
+      if (!email || !password) {
         res.status(400).json({
           message: "Please provide email, password",
         });

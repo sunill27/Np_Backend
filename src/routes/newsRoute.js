@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const newsController = require("../controllers/newsController");
+const parser = require("../middleware/upload");
 
 const {
   authenticate,
@@ -9,12 +10,24 @@ const {
 } = require("../middleware/authMiddleware");
 
 //News
-router.route("/").post(authenticate, restrictTo(ADMIN), newsController.addNews);
+router
+  .route("/")
+  .post(
+    authenticate,
+    restrictTo(ADMIN),
+    parser.single("image"),
+    newsController.addNews
+  );
 router.route("/").get(newsController.fetchNews);
 router.route("/:id").get(newsController.singleNews);
 router
   .route("/:id")
-  .patch(authenticate, restrictTo(ADMIN), newsController.updateNews);
+  .patch(
+    authenticate,
+    restrictTo(ADMIN),
+    parser.single("image"),
+    newsController.updateNews
+  );
 router
   .route("/:id")
   .delete(authenticate, restrictTo(ADMIN), newsController.deleteNews);
