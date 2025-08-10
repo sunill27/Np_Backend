@@ -1,3 +1,4 @@
+const Category = require("../database/model/categoryModel");
 const News = require("../database/model/newsModel");
 const cloudinary = require("../middleware/cloudinaryConfig");
 
@@ -5,7 +6,15 @@ class NewsController {
   // Add News API
   async addNews(req, res) {
     console.log("addNews called");
-    const { title, excerpt, description, author, publishedAt } = req.body;
+    const {
+      title,
+      excerpt,
+      description,
+      author,
+      publishedAt,
+      category,
+      subcategory,
+    } = req.body;
     if (!title || !description) {
       return res
         .status(400)
@@ -18,6 +27,8 @@ class NewsController {
         description,
         author,
         publishedAt,
+        category,
+        subcategory,
       };
       // If image was uploaded, add imageUrl and imageId
       if (req.file) {
@@ -38,27 +49,50 @@ class NewsController {
   //Fetch API:
   async fetchNews(req, res) {
     try {
-      const news = await News.find();
-      if (!news) {
-        res.status(404).json({
-          message: "Nothing found!",
+      const { category, sort = "latest", limit = 10 } = req.query;
+      const query = {};
+      if (category) {
+        const categoryDoc = await Category.findOne({
+          categoryName: category.toLowerCase(),
         });
+
+        if (!categoryDoc) {
+          return res.status(404).json({ message: "Category not found" });
+        }
+        query.category = categoryDoc._id;
       }
+
+      const sortOption =
+        sort === "latest"
+          ? { createdAt: -1 }
+          : sort === "oldest"
+          ? { createdAt: 1 }
+          : {};
+
+      const news = await News.find(query)
+        .sort(sortOption)
+        .limit(parseInt(limit));
+
       res.status(200).json({
         message: "News fetched successfully!",
         data: news,
       });
     } catch (error) {
-      console.error("Fetch error:", error);
-      res.status(500).json({ message: "Error fetching news", error });
+      console.error("Error in fetchNews:", error);
+      res
+        .status(500)
+        .json({ message: "Error fetching news", error: error.message });
     }
   }
 
   //Fetch single News API:
   async singleNews(req, res) {
-    const { id } = req.params;
+    const { _id } = req.params;
     try {
-      const news = await News.findById(id);
+      const news = await News.findById(_id).populate(
+        "category",
+        "categoryName"
+      ); // <-- add populate here
       if (!news) {
         return res.status(404).json({
           message: "Nothing found!",
@@ -77,7 +111,15 @@ class NewsController {
   //Update API:
   async updateNews(req, res) {
     const { id } = req.params;
-    const { title, excerpt, description, author, publishedAt } = req.body;
+    const {
+      title,
+      excerpt,
+      description,
+      author,
+      publishedAt,
+      category,
+      subcategory,
+    } = req.body;
 
     try {
       const news = await News.findById(id);
@@ -101,6 +143,8 @@ class NewsController {
       if (description !== undefined) news.description = description;
       if (author !== undefined) news.author = author;
       if (publishedAt !== undefined) news.publishedAt = publishedAt;
+      if (category !== undefined) news.category = category;
+      if (subcategory !== undefined) news.subcategory = subcategory;
 
       await news.save();
       res.status(200).json({

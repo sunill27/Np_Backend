@@ -2,34 +2,34 @@ const Category = require("../database/model/categoryModel");
 
 class categoryController {
   categoryData = [
-    { categoryName: "Politics" },
-    { categoryName: "Administration" },
+    { categoryName: "politics" },
+    { categoryName: "administration" },
     {
-      categoryName: "Finance",
+      categoryName: "finance",
       subcategories: [
-        { subCategoryName: "Bank" },
-        { subCategoryName: "Other" },
+        { subCategoryName: "bank" },
+        { subCategoryName: "other" },
       ],
     },
-    { categoryName: "Agriculture" },
-    { categoryName: "Energy" },
-    { categoryName: "Infrastructure" },
-    { categoryName: "Corporate" },
-    { categoryName: "Technology" },
-    { categoryName: "Automobiles" },
+    { categoryName: "agriculture" },
+    { categoryName: "energy" },
+    { categoryName: "infrastructure" },
+    { categoryName: "corporate" },
+    { categoryName: "technology" },
+    { categoryName: "automobiles" },
     {
-      categoryName: "Sports",
+      categoryName: "sports",
       subcategories: [
-        { subCategoryName: "Cricket" },
-        { subCategoryName: "Football" },
-        { subCategoryName: "Other" },
+        { subCategoryName: "cricket" },
+        { subCategoryName: "football" },
+        { subCategoryName: "other" },
       ],
     },
     {
-      categoryName: "Other",
+      categoryName: "other",
       subcategories: [
-        { subCategoryName: "Opinion" },
-        { subCategoryName: "Interview" },
+        { subCategoryName: "opinion" },
+        { subCategoryName: "interview" },
       ],
     },
   ];

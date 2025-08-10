@@ -19,9 +19,9 @@ router
     newsController.addNews
   );
 router.route("/").get(newsController.fetchNews);
-router.route("/:id").get(newsController.singleNews);
+router.route("/:_id").get(newsController.singleNews);
 router
-  .route("/:id")
+  .route("/:_id")
   .patch(
     authenticate,
     restrictTo(ADMIN),
@@ -29,14 +29,14 @@ router
     newsController.updateNews
   );
 router
-  .route("/:id")
+  .route("/:_id")
   .delete(authenticate, restrictTo(ADMIN), newsController.deleteNews);
 
 // Comments:
-router.route("/:id/comments").post(authenticate, newsController.addComment);
-router.route("/:id/comments").get(newsController.fetchComments);
+router.route("/:_id/comments").post(authenticate, newsController.addComment);
+router.route("/:_id/comments").get(newsController.fetchComments);
 router
-  .route("/:id/comments/:commentId")
+  .route("/:_id/comments/:commentId")
   .delete(authenticate, restrictTo(ADMIN), newsController.deleteComment);
 
 module.exports = router;

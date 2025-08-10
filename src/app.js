@@ -36,12 +36,13 @@ async function startServer() {
 
   const newsRoute = require("./routes/newsRoute");
   app.use("/news", newsRoute);
+  app.use("/admin/news", newsRoute);
 
   const userRoute = require("./routes/userRoute");
   app.use("/user", userRoute);
 
   const categoryRoute = require("./routes/categoryRoute");
-  app.use("/categories", categoryRoute);
+  app.use("/admin/categories", categoryRoute);
 
   // Cloudinary upload endpoint
   app.post("/upload", parser.single("image"), (req, res) => {

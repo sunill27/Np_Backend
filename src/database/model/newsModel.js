@@ -34,6 +34,16 @@ const newsSchema = new mongoose.Schema(
     },
     tags: [String],
     comments: [commentSchema],
+
+    // Add reference to Category
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    // Add subCategory name directly (or as an ID if needed)
+    subcategory: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
   },
   {
     timestamps: true,

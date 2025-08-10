@@ -1,10 +1,14 @@
 const mongoose = require("mongoose");
 
-const subCategorySchema = new mongoose.Schema({
-  subCategoryName: {
-    type: String,
+const subCategorySchema = new mongoose.Schema(
+  {
+    subCategoryName: {
+      type: String,
+    },
   },
-});
+  { _id: true }
+);
+
 const categorySchema = new mongoose.Schema({
   categoryName: {
     type: String,
