@@ -35,6 +35,7 @@ class NewsController {
         newsData.imageUrl = req.file.path;
         newsData.imageId = req.file.filename; // Cloudinary public_id
       }
+      console.log("Uploaded file info:", req.file);
 
       const news = await News.create(newsData);
       res.status(200).json({
@@ -110,7 +111,7 @@ class NewsController {
 
   //Update API:
   async updateNews(req, res) {
-    const { id } = req.params;
+    const { _id } = req.params;
     const {
       title,
       excerpt,
@@ -122,7 +123,7 @@ class NewsController {
     } = req.body;
 
     try {
-      const news = await News.findById(id);
+      const news = await News.findById(_id);
       if (!news) {
         return res.status(404).json({ message: "News not found." });
       }
@@ -159,9 +160,9 @@ class NewsController {
 
   // Delete API:
   async deleteNews(req, res) {
-    const { id } = req.params;
+    const { _id } = req.params;
     try {
-      const news = await News.findById(id);
+      const news = await News.findById(_id);
       if (!news) {
         return res.status(404).json({ message: "News not found." });
       }
@@ -180,10 +181,45 @@ class NewsController {
     }
   }
 
+  // Fetch all news by category
+
+  async getNewsByCategoryName(req, res) {
+    const { categoryName } = req.params;
+
+    try {
+      const category = await Category.findOne({ categoryName });
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      const newsList = await News.find({ category: category._id }).populate(
+        "category",
+        "categoryName"
+      );
+
+      if (!newsList.length) {
+        return res
+          .status(404)
+          .json({ message: "No news found for this category" });
+      }
+
+      res.status(200).json({
+        message: "News by category fetched successfully!",
+        data: newsList,
+      });
+    } catch (error) {
+      console.error("Error fetching news by category:", error);
+      res.status(500).json({
+        message: "Error fetching news by category",
+        error: error.message,
+      });
+    }
+  }
+
   // COMMENTS API's:
   // Add comment:
   async addComment(req, res) {
-    const { id } = req.params;
+    const { _id } = req.params;
     const { username, text } = req.body;
 
     if (!username || !text) {
@@ -192,7 +228,7 @@ class NewsController {
         .json({ message: "Username and comment text are required." });
     }
     try {
-      const news = await News.findById(id);
+      const news = await News.findById(_id);
       if (!news) {
         return res.status(404).json({ message: "News not found!" });
       }
@@ -213,9 +249,9 @@ class NewsController {
 
   // Fetch Comments API:
   async fetchComments(req, res) {
-    const { id } = req.params;
+    const { _id } = req.params;
     try {
-      const news = await News.findById(id);
+      const news = await News.findById(_id);
       if (!news) {
         res.status(404).json({
           message: "Nothing found!",
@@ -233,9 +269,9 @@ class NewsController {
 
   //Delete comments API:
   async deleteComment(req, res) {
-    const { id, commentId } = req.params;
+    const { _id, commentId } = req.params;
     try {
-      const news = await News.findById(id);
+      const news = await News.findById(_id);
       if (!news) {
         return res.status(404).json({ message: "News not found!" });
       }

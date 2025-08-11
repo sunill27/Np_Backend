@@ -20,6 +20,8 @@ router
   );
 router.route("/").get(newsController.fetchNews);
 router.route("/:_id").get(newsController.singleNews);
+router.get("/category/:categoryName", newsController.getNewsByCategoryName);
+
 router
   .route("/:_id")
   .patch(
