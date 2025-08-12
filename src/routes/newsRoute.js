@@ -35,7 +35,7 @@ router
   .delete(authenticate, restrictTo(ADMIN), newsController.deleteNews);
 
 // Comments:
-router.route("/:_id/comments").post(authenticate, newsController.addComment);
+router.route("/:_id/comments").post(newsController.addComment);
 router.route("/:_id/comments").get(newsController.fetchComments);
 router
   .route("/:_id/comments/:commentId")

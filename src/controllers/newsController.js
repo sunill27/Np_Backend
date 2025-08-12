@@ -50,7 +50,13 @@ class NewsController {
   //Fetch API:
   async fetchNews(req, res) {
     try {
-      const { category, sort = "latest", limit = 10 } = req.query;
+      const {
+        category,
+        excludeCategory,
+        sort = "latest",
+        limit = 50,
+        random = false,
+      } = req.query;
       const query = {};
       if (category) {
         const categoryDoc = await Category.findOne({
@@ -62,7 +68,27 @@ class NewsController {
         }
         query.category = categoryDoc._id;
       }
-
+      // If excludeCategory is specified
+      if (excludeCategory) {
+        const excludedCategoryDoc = await Category.findOne({
+          categoryName: excludeCategory.toLowerCase(),
+        });
+        if (excludedCategoryDoc) {
+          query.category = { $ne: excludedCategoryDoc._id };
+        }
+      }
+      // Handle random fetch with aggregation
+      if (random === "true") {
+        const pipeline = [
+          { $match: query },
+          { $sample: { size: parseInt(limit) || 6 } },
+        ];
+        const news = await News.aggregate(pipeline);
+        return res.status(200).json({
+          message: "Random news fetched successfully!",
+          data: news,
+        });
+      }
       const sortOption =
         sort === "latest"
           ? { createdAt: -1 }
@@ -182,7 +208,6 @@ class NewsController {
   }
 
   // Fetch all news by category
-
   async getNewsByCategoryName(req, res) {
     const { categoryName } = req.params;
 
@@ -251,9 +276,9 @@ class NewsController {
   async fetchComments(req, res) {
     const { _id } = req.params;
     try {
-      const news = await News.findById(_id);
+      const news = await News.findById(_id).populate("comments");
       if (!news) {
-        res.status(404).json({
+        return res.status(404).json({
           message: "Nothing found!",
         });
       }
@@ -275,13 +300,12 @@ class NewsController {
       if (!news) {
         return res.status(404).json({ message: "News not found!" });
       }
-      const comment = News.comments.id(commentId);
+      const comment = news.comments.id(commentId);
       if (!comment) {
         return res.status(404).json({ message: "Comment not found!" });
       }
       news.comments.pull(commentId);
       await news.save();
-
       res.status(200).json({
         message: "Comment deleted successfully!",
       });
