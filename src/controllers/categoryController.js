@@ -16,7 +16,11 @@ class categoryController {
     { categoryName: "infrastructure" },
     { categoryName: "corporate" },
     { categoryName: "technology" },
-    { categoryName: "automobiles" },
+    { categoryName: "stocks" },
+    { categoryName: "weather" },
+    { categoryName: "tourism" },
+    { categoryName: "interviews" },
+    { categoryName: "opinions" },
     {
       categoryName: "sports",
       subcategories: [
@@ -25,13 +29,7 @@ class categoryController {
         { subCategoryName: "other" },
       ],
     },
-    {
-      categoryName: "other",
-      subcategories: [
-        { subCategoryName: "opinion" },
-        { subCategoryName: "interview" },
-      ],
-    },
+    { categoryName: "other" },
   ];
 
   // Seeding Categories:
