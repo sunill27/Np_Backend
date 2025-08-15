@@ -55,9 +55,13 @@ class NewsController {
         excludeCategory,
         sort = "latest",
         limit = 50,
+        page = 1,
         random = false,
       } = req.query;
+
       const query = {};
+
+      // Filter by category
       if (category) {
         const categoryDoc = await Category.findOne({
           categoryName: category.toLowerCase(),
@@ -68,7 +72,8 @@ class NewsController {
         }
         query.category = categoryDoc._id;
       }
-      // If excludeCategory is specified
+
+      // Exclude category
       if (excludeCategory) {
         const excludedCategoryDoc = await Category.findOne({
           categoryName: excludeCategory.toLowerCase(),
@@ -77,7 +82,8 @@ class NewsController {
           query.category = { $ne: excludedCategoryDoc._id };
         }
       }
-      // Handle random fetch with aggregation
+
+      // Random news
       if (random === "true") {
         const pipeline = [
           { $match: query },
@@ -89,6 +95,8 @@ class NewsController {
           data: news,
         });
       }
+
+      // Sorting
       const sortOption =
         sort === "latest"
           ? { createdAt: -1 }
@@ -96,19 +104,30 @@ class NewsController {
           ? { createdAt: 1 }
           : {};
 
+      const parsedLimit = parseInt(limit) || 10;
+      const parsedPage = parseInt(page) || 1;
+      const skip = (parsedPage - 1) * parsedLimit;
+
+      // Get total count for pagination
+      const totalCount = await News.countDocuments(query);
       const news = await News.find(query)
         .sort(sortOption)
-        .limit(parseInt(limit));
+        .skip(skip)
+        .limit(parsedLimit);
 
-      res.status(200).json({
+      return res.status(200).json({
         message: "News fetched successfully!",
         data: news,
+        totalCount,
+        currentPage: parsedPage,
+        totalPages: Math.ceil(totalCount / parsedLimit),
       });
     } catch (error) {
       console.error("Error in fetchNews:", error);
-      res
-        .status(500)
-        .json({ message: "Error fetching news", error: error.message });
+      res.status(500).json({
+        message: "Error fetching news",
+        error: error.message,
+      });
     }
   }
 
@@ -210,27 +229,39 @@ class NewsController {
   // Fetch all news by category
   async getNewsByCategoryName(req, res) {
     const { categoryName } = req.params;
+    const { limit = 10, page = 1 } = req.query; // Defaults
 
     try {
       const category = await Category.findOne({ categoryName });
+
       if (!category) {
         return res.status(404).json({ message: "Category not found" });
       }
 
-      const newsList = await News.find({ category: category._id }).populate(
-        "category",
-        "categoryName"
-      );
+      const parsedLimit = parseInt(limit);
+      const parsedPage = parseInt(page);
+      const skip = (parsedPage - 1) * parsedLimit;
 
-      if (!newsList.length) {
-        return res
-          .status(404)
-          .json({ message: "No news found for this category" });
+      // Count total matching documents
+      const totalCount = await News.countDocuments({ category: category._id });
+
+      // Fetch paginated results
+      const newsList = await News.find({ category: category._id })
+        .populate("category", "categoryName")
+        .sort({ createdAt: -1 }) // Optional: latest first
+        .skip(skip)
+        .limit(parsedLimit);
+
+      if (!newsList.length && parsedPage > 1) {
+        return res.status(404).json({ message: "No more news to load" });
       }
 
       res.status(200).json({
         message: "News by category fetched successfully!",
         data: newsList,
+        totalCount,
+        currentPage: parsedPage,
+        totalPages: Math.ceil(totalCount / parsedLimit),
       });
     } catch (error) {
       console.error("Error fetching news by category:", error);
